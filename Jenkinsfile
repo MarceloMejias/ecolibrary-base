@@ -81,19 +81,26 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy') {
+stage('Build & Deploy') {
             steps {
                 script {
-                    // Aquí Docker Compose ya encontrará las carpetas 'api' y 'web'
-                    // porque las clonamos en el Stage 1
-                    
-                    if (env.BRANCH_NAME ==~ /feature\/.*/) {
-                        echo "--- DESPLIEGUE DEV (Puertos 8000s) ---"
+                    // Lógica de Ramas Actualizada
+                    // AHORA: Si es 'dev' O es una 'feature/...', va al entorno de desarrollo
+                    if (env.BRANCH_NAME == 'dev' || env.BRANCH_NAME ==~ /feature\/.*/) {
+                        echo "--- DESPLIEGUE ENTORNO DE DESARROLLO (Dev) ---"
+                        echo "Rama: ${env.BRANCH_NAME}"
+                        // Despliega en puertos 8001 (API) y 8002 (Web)
                         sh 'docker-compose up -d --build'
                     } 
+                    // Si es 'main' o 'release/...', va a producción
                     else if (env.BRANCH_NAME == 'main' || env.BRANCH_NAME ==~ /release\/.*/) {
-                        echo "--- DESPLIEGUE PROD (Puertos 9000s) ---"
+                        echo "--- DESPLIEGUE ENTORNO DE PRODUCCIÓN (Prod) ---"
+                        echo "Rama: ${env.BRANCH_NAME}"
+                        // Despliega en puertos 9001 (API) y 9002 (Web)
                         sh 'docker-compose -f docker-compose.yml -f docker-compose.prod.yml -p prod up -d --build'
+                    }
+                    else {
+                        echo "Rama ${env.BRANCH_NAME} solo pasó pruebas (CI), no se despliega."
                     }
                 }
             }

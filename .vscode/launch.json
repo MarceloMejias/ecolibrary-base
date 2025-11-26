@@ -1,0 +1,79 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Docker: API (Backend)",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}/core_api",
+                    "remoteRoot": "/app"
+                }
+            ],
+            "justMyCode": false,
+            "django": true
+        },
+        {
+            "name": "Docker: Web (Frontend)",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5679
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}/web",
+                    "remoteRoot": "/app"
+                }
+            ],
+            "justMyCode": false,
+            "django": true
+        },
+        {
+            "name": "Python: Core API",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/core_api/manage.py",
+            "args": [
+                "runserver",
+                "8001"
+            ],
+            "django": true,
+            "justMyCode": false,
+            "cwd": "${workspaceFolder}/core_api"
+        },
+        {
+            "name": "Python: Web Frontend",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/web/manage.py",
+            "args": [
+                "runserver",
+                "8002"
+            ],
+            "django": true,
+            "justMyCode": false,
+            "cwd": "${workspaceFolder}/web"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Docker: API + Web",
+            "configurations": [
+                "Docker: API (Backend)",
+                "Docker: Web (Frontend)"
+            ],
+            "presentation": {
+                "hidden": false,
+                "group": "docker",
+                "order": 1
+            }
+        }
+    ]
+}

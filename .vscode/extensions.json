@@ -1,0 +1,13 @@
+{
+    "recommendations": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "ms-azuretools.vscode-docker",
+        "batisteo.vscode-django",
+        "ms-python.debugpy",
+        "ms-vscode.makefile-tools",
+        "redhat.vscode-yaml",
+        "esbenp.prettier-vscode"
+    ]
+}

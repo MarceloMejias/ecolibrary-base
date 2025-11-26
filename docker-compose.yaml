@@ -1,0 +1,97 @@
+services:
+  # Infraestructura de Datos
+  db:
+    image: postgres:15-alpine
+    container_name: ecolibrary_db
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ecolib-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d ecolibrary_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Aplicaciones Principales
+  
+  # Contenedor A: Backend API
+  api:
+    build: ./core_api
+    container_name: ecolibrary_api
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./core_api:/app  # <--- CAMBIO: Ruta actualizada
+    ports:
+      - "8001:8000"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - ecolib-net
+
+  # Contenedor B: Frontend Web
+  web:
+    build: ./web  # <--- CAMBIO: Ruta actualizada
+    container_name: ecolibrary_web
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./web:/app  # <--- CAMBIO: Ruta actualizada
+    ports:
+      - "8002:8000"
+    env_file:
+      - .env
+    depends_on:
+      - api
+    networks:
+      - ecolib-net
+
+  # Herramientas de Desarrollo y CI/CD
+
+  sonarqube:
+    image: sonarqube:community
+    container_name: ecolib_sonarqube
+    ports:
+      - "9010:9000"  # <--- CAMBIO: Puerto corregido (Host 9010 -> Contenedor 9000)
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - ecolib-net
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: ecolib_jenkins
+    user: root
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - ecolib-net
+    depends_on:
+      - sonarqube
+
+networks:
+  ecolib-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  jenkins_home:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:

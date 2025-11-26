@@ -1,0 +1,15 @@
+# docker-compose.prod.yml
+services:
+  api:
+    container_name: ecolibrary_api_prod
+    ports:
+      - "9001:8000" # Puerto 9001 para la API de PROD
+    environment:
+      - DEBUG=False
+
+  web:
+    container_name: ecolibrary_web_prod
+    ports:
+      - "9002:8000" # Puerto 9002 para la Web de PROD
+    environment:
+      - API_INTERNAL_URL=http://api:8000 # Internamente se ven igual

@@ -52,13 +52,13 @@ pipeline {
                     
                     // Tests API
                     dir('api') {
-                        sh '~/.cargo/bin/uv sync'
-                        sh '~/.cargo/bin/uv run pytest --cov=. --cov-report=xml'
+                        sh '~/.local/bin/uv sync'
+                        sh '~/.local/bin/uv run pytest --cov=. --cov-report=xml'
                     }
                     // Tests WEB
                     dir('web') {
-                        sh '~/.cargo/bin/uv sync'
-                        sh '~/.cargo/bin/uv run pytest --cov=. --cov-report=xml'
+                        sh '~/.local/bin/uv sync'
+                        sh '~/.local/bin/uv run pytest --cov=. --cov-report=xml'
                     }
                 }
             }

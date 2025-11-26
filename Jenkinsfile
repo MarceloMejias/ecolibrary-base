@@ -5,8 +5,8 @@ pipeline {
         PATH = "$HOME/.cargo/bin:$PATH"
         SCANNER_HOME = tool 'sonar-scanner'
         // URLs de tus otros repositorios
-        REPO_API_URL = 'https://github.com/MarceloMejias/ecolibrary-api.git'
-        REPO_WEB_URL = 'https://github.com/MarceloMejias/ecolibrary-web.git'
+        REPO_API_URL = 'file:///local_repos/ecolibrary-api'
+        REPO_WEB_URL = 'file:///local_repos/ecolibrary-web'
     }
 
     stages {

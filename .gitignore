@@ -8,3 +8,8 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Simulación de Jenkins
+api/
+web/
+.env

@@ -2,29 +2,60 @@ pipeline {
     agent any
 
     environment {
-        // Aseguramos que uv pueda instalarse y ejecutarse
         PATH = "$HOME/.cargo/bin:$PATH"
         SCANNER_HOME = tool 'sonar-scanner'
+        // URLs de tus otros repositorios
+        REPO_API_URL = 'https://github.com/MarceloMejias/ecolibrary-api.git'
+        REPO_WEB_URL = 'https://github.com/MarceloMejias/ecolibrary-web.git'
     }
 
     stages {
-        stage('Setup Environment') {
+        stage('Checkout Sub-Repositories') {
             steps {
-                // Instalar uv en el agente de Jenkins (que es un contenedor)
-                sh 'curl -LsSf https://astral.sh/uv/install.sh | sh'
+                script {
+                    // Limpiamos workspace anterior para evitar mezclas
+                    cleanWs()
+                    
+                    // 1. Clonar el Repo BASE (donde estamos) ya lo hace Jenkins automático
+                    // pero necesitamos clonar los hijos en carpetas específicas.
+
+                    // Descargar API
+                    dir('api') {
+                        echo "Clonando API desde rama: ${env.BRANCH_NAME}"
+                        // Intentamos bajar la misma rama (feature/x), si falla, bajamos main/dev
+                        try {
+                            git branch: env.BRANCH_NAME, url: env.REPO_API_URL
+                        } catch (Exception e) {
+                            echo "Rama ${env.BRANCH_NAME} no existe en API, usando 'main'"
+                            git branch: 'main', url: env.REPO_API_URL
+                        }
+                    }
+
+                    // Descargar WEB
+                    dir('web') {
+                        echo "Clonando WEB desde rama: ${env.BRANCH_NAME}"
+                        try {
+                            git branch: env.BRANCH_NAME, url: env.REPO_WEB_URL
+                        } catch (Exception e) {
+                            echo "Rama ${env.BRANCH_NAME} no existe en WEB, usando 'main'"
+                            git branch: 'main', url: env.REPO_WEB_URL
+                        }
+                    }
+                }
             }
         }
 
-        stage('Test & Coverage') {
+        stage('Setup & Test') {
             steps {
                 script {
-                    // 1. Tests API
+                    sh 'curl -LsSf https://astral.sh/uv/install.sh | sh'
+                    
+                    // Tests API
                     dir('api') {
                         sh '~/.cargo/bin/uv sync'
-                        // Genera reporte XML para SonarQube
                         sh '~/.cargo/bin/uv run pytest --cov=. --cov-report=xml'
                     }
-                    // 2. Tests WEB
+                    // Tests WEB
                     dir('web') {
                         sh '~/.cargo/bin/uv sync'
                         sh '~/.cargo/bin/uv run pytest --cov=. --cov-report=xml'
@@ -36,14 +67,8 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    // Analizamos API
-                    dir('api') {
-                        sh "${SCANNER_HOME}/bin/sonar-scanner"
-                    }
-                    // Analizamos Web
-                    dir('web') {
-                        sh "${SCANNER_HOME}/bin/sonar-scanner"
-                    }
+                    dir('api') { sh "${SCANNER_HOME}/bin/sonar-scanner" }
+                    dir('web') { sh "${SCANNER_HOME}/bin/sonar-scanner" }
                 }
             }
         }
@@ -51,7 +76,6 @@ pipeline {
         stage('Quality Gate') {
             steps {
                 timeout(time: 2, unit: 'MINUTES') {
-                    // REQUISITO CRÍTICO: Detener si falla 
                     waitForQualityGate abortPipeline: true
                 }
             }
@@ -60,20 +84,16 @@ pipeline {
         stage('Build & Deploy') {
             steps {
                 script {
-                    // Lógica de Ramas 
+                    // Aquí Docker Compose ya encontrará las carpetas 'api' y 'web'
+                    // porque las clonamos en el Stage 1
+                    
                     if (env.BRANCH_NAME ==~ /feature\/.*/) {
-                        echo "Desplegando entorno de DESARROLLO (Dev)"
-                        // Usa el docker-compose normal (Puertos 8001/8002)
+                        echo "--- DESPLIEGUE DEV (Puertos 8000s) ---"
                         sh 'docker-compose up -d --build'
                     } 
                     else if (env.BRANCH_NAME == 'main' || env.BRANCH_NAME ==~ /release\/.*/) {
-                        echo "Desplegando entorno de PRODUCCIÓN (Prod)"
-                        // Usa el override de producción (Puertos 9001/9002)
-                        // -p prod: Crea contenedores con prefijo 'prod' para que coexistan
+                        echo "--- DESPLIEGUE PROD (Puertos 9000s) ---"
                         sh 'docker-compose -f docker-compose.yml -f docker-compose.prod.yml -p prod up -d --build'
-                    }
-                    else {
-                        echo "Rama no configurada para despliegue automático"
                     }
                 }
             }

@@ -9,7 +9,10 @@ wheels/
 # Virtual environments
 .venv
 
+# Proyectos separados (tienen su propio git)
+core_api/
+web/
+
 # Simulación de Jenkins
 api/
-web/
 .env

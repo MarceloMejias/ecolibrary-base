@@ -48,17 +48,21 @@ pipeline {
         stage('Setup & Test') {
             steps {
                 script {
+                    // Instalamos uv
                     sh 'curl -LsSf https://astral.sh/uv/install.sh | sh'
+                    
+                    // --- CORRECCIÓN AQUÍ: Usamos .local en lugar de .cargo ---
                     
                     // Tests API
                     dir('api') {
-                        sh '~/.cargo/bin/uv sync'
-                        sh '~/.cargo/bin/uv run pytest --cov=. --cov-report=xml'
+                        // Usamos la ruta correcta donde se instaló
+                        sh '~/.local/bin/uv sync'
+                        sh '~/.local/bin/uv run pytest --cov=. --cov-report=xml'
                     }
                     // Tests WEB
                     dir('web') {
-                        sh '~/.cargo/bin/uv sync'
-                        sh '~/.cargo/bin/uv run pytest --cov=. --cov-report=xml'
+                        sh '~/.local/bin/uv sync'
+                        sh '~/.local/bin/uv run pytest --cov=. --cov-report=xml'
                     }
                 }
             }

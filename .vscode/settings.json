@@ -45,5 +45,9 @@
     "docker.containers.groupBy": "Compose Project Name",
     "docker.commands.build": "docker-compose build ${serviceName}",
     "docker.commands.up": "docker-compose up -d ${serviceName}",
-    "docker.commands.down": "docker-compose down"
+    "docker.commands.down": "docker-compose down",
+    "sonarlint.connectedMode.project": {
+        "connectionId": "SonarQube",
+        "projectKey": "EcoLibrary-Web"
+    }
 }
